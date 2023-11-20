@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
 const Fawn = require('fawn');
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost/fawn');
+
+mongoose.connect('mongodb://localhost:27017/fawn');
 const accountSchema = new mongoose.Schema({
   user: String,
   balance: Number,
 });
 const Account = mongoose.model('Account', accountSchema);
-// Initialize Fawn
 Fawn.init(mongoose);
-//perform transaction
+
 async function performTransaction(fromUser, toUser, amount) {
   try {
     // Start the Fawn task
