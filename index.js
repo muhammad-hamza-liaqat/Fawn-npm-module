@@ -1,6 +1,8 @@
 const mongoose = require ('mongoose');
 const Fawn = require ('fawn');
 
+// downgraded mongoose to 5.13.19
+
 mongoose.connect('mongodb://127.0.0.1/fawnModel');
 const accountSchema = new mongoose.Schema({
   user: String,
