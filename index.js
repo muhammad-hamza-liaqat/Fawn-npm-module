@@ -1,56 +1,45 @@
-const mongoose = require('mongoose');
-const Fawn = require('fawn');
+const mongoose = require ('mongoose');
+const Fawn = require ('fawn');
 
-mongoose.Promise = global.Promise;
-
-mongoose.connect('mongodb://localhost:27017/fawnModel');
-
-const db = mongoose.connection;
-
-db.on('error', (err) => {
-    console.error('MongoDB connection error:', err);
+mongoose.connect('mongodb://127.0.0.1/fawnModel');
+const accountSchema = new mongoose.Schema({
+  user: String,
+  balance: Number,
 });
-
-db.once('open', async () => {
-    console.log('Mongoose connection established.');
-    // instead of using fawn.init("mongoose"), uses this line it will resolve the issue module instance not declared!
-    Fawn.init("mongodb://localhost:27017/fawnModel");
-
-    // schema
-    const bankAccountSchema = new mongoose.Schema({
-        accountNumber: { type: String, required: true, unique: true },
-        balance: { type: Number, default: 0 },
+const Account = mongoose.model('Account', accountSchema);
+// Initialize Fawn
+Fawn.init(mongoose);
+async function performTransaction(fromUser, toUser, amount) {
+  try {
+    await Fawn.Task()
+      .update('accounts', { user: fromUser }, { $inc: { balance: -amount } })
+      .update('accounts', { user: toUser }, { $inc: { balance: amount } })
+      .run();
+    console.log('Transaction successful');
+  } catch (error) {
+    console.error(`Transaction failed: ${error}`);
+  }
+}
+async function runFawn() {
+  try {
+    await Account.create([
+      {user:'Hamza', balance : 150},
+      {user:'Saad', balance : 100}
+    ])
+    const initialAccounts = await Account.find();
+    console.log('Initial Account Balances:');
+    initialAccounts.forEach(account => {
+      console.log(`${account.user}: ${account.balance}`);
     });
-
-    // Create the BankAccount model
-    const BankAccount = mongoose.model('BankAccount', bankAccountSchema);
-
-    try {
-        // Create two bank accounts
-        await BankAccount.create([
-            { accountNumber: 'account101', balance: 1500 },
-            { accountNumber: 'account202', balance: 500 },
-        ]);
-
-        console.log('Initial bank account balances:');
-        const initialBalances = await BankAccount.find();
-        console.log(initialBalances);
-
-        // Use Fawn to perform a transaction: Transfer $200 from account '123456' to '789012'
-        await Fawn.Task()
-            .update('BankAccount', { accountNumber: 'Uniqueaccount101' }, { $inc: { balance: -1000 } })
-            .update('BankAccount', { accountNumber: 'account202' }, { $inc: { balance: +1000 } })
-            .run();
-
-        console.log('Transaction completed successfully.');
-
-        // Check the final balances after the transaction
-        const finalBalances = await BankAccount.find();
-        console.log('Final bank account balances:');
-        console.log(finalBalances);
-    } catch (error) {
-        console.error('Transaction failed:', error);
-    } finally {
-        mongoose.connection.close();
-    }
-});
+    // Perform a transaction
+    await performTransaction('Hamza', 'Saad', 50);
+    const updatedAccounts = await Account.find();
+    console.log('Balance after Transaction:');
+    updatedAccounts.forEach(account => {
+      console.log(`${account.user}: ${account.balance}`);
+    });
+  } catch (error) {
+    console.error(`Error: ${error}`);
+  }
+}
+runFawn();
