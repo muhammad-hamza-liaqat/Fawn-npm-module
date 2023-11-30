@@ -1,6 +1,8 @@
 const mongoose = require ('mongoose');
 const Fawn = require ('fawn');
 
+
+// remember to downgrade the mongoose version else it will not return
 // downgraded mongoose to 5.13.19
 
 mongoose.connect('mongodb://127.0.0.1/fawnModel');
