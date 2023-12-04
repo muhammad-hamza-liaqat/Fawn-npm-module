@@ -9,6 +9,7 @@ const accountSchema = new mongoose.Schema({
 
 const Account = mongoose.model('Account', accountSchema);
 
+// setting the initial balance, static approach
 const initialBalances = [
   { user: 'Hamza', balance: 600 },
   { user: 'Saad', balance: 100 },
@@ -23,7 +24,6 @@ async function performTransaction(fromUser, toUser, amount) {
       throw new Error('Insufficient balance');
     }
 
-    // Proceed with the transaction if the sender has sufficient balance
     await Account.updateOne({ user: fromUser }, { $inc: { balance: -amount } });
     await Account.updateOne({ user: toUser }, { $inc: { balance: amount } });
 
@@ -37,17 +37,17 @@ async function initializeBalances() {
   // Check if initial balances already exist
   const existingBalances = await Account.find();
   if (existingBalances.length === 0) {
-    // Set hard-coded initial account balances
+    // function initial balance runs, if there is no balance in the database before
     await Account.create(initialBalances);
     console.log('Initial balances created.');
   } else {
-    console.log('Initial balances already exist. Skipping initialization.');
+    console.log('initial balance already available');
   }
 }
 
 async function runTransaction() {
   try {
-    // Initialize initial account balances if needed
+    // Initialize initial account balance
     await initializeBalances();
 
     // Print initial account balances
@@ -56,13 +56,12 @@ async function runTransaction() {
     initialAccounts.forEach(account => {
       console.log(`${account.user}: ${account.balance}`);
     });
-
-    // Perform a transaction only if Hamza's balance is greater than or equal to the transaction amount
+    // transection, if hamza's balance is greater or equal to the transection amount to be done...
     const hamza = await Account.findOne({ user: 'Hamza' });
     if (hamza && hamza.balance >= 200) {
       await performTransaction('Hamza', 'Saad', 200);
     } else {
-      console.log('Hamza does not have sufficient balance to initiate the transaction.');
+      console.log('Hamza doesnot have the enough balance to commit the trasection. Please Recharge again.');
     }
 
     // Print updated account balances
@@ -77,6 +76,5 @@ async function runTransaction() {
     mongoose.connection.close();
   }
 }
-
-// Run the transaction
+// run the code....
 runTransaction();
